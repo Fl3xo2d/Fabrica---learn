@@ -2,64 +2,51 @@
 
 public class ResourcePickup : MonoBehaviour
 {
-    public ResourceData resourceData;   // Настраиваемый тип ресурса
+    [Header("Resource")]
+    public ResourceData resource;
+    public int amount = 1;
 
-    private Transform player;
-    private PlayerInventory playerInventory;
-    private bool canBeCollected = false;
+    [HideInInspector]
+    public bool canBeCollected = false;
 
-    void Start()
+    [HideInInspector]
+    public Transform target; // игрок, к которому летим
+
+    public float baseSpeed = 4f;
+    public float acceleration = 8f;
+
+    private float currentSpeed;
+
+    void Update()
     {
-        // Находим игрока
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null)
-        {
-            player = playerObj.transform;
-            playerInventory = playerObj.GetComponent<PlayerInventory>();
-        }
+        if (!canBeCollected || target == null)
+            return;
 
-        // Случайный вылет при спавне
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            Vector3 randomDir = new Vector3(
-                Random.Range(-1f, 1f),
-                0.5f,
-                Random.Range(-1f, 1f)
-            ).normalized;
+        currentSpeed += acceleration * Time.deltaTime;
 
-            float force = Random.Range(1.5f, 3f);
-            rb.AddForce(randomDir * force, ForceMode.Impulse);
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            target.position,
+            currentSpeed * Time.deltaTime
+        );
+
+        if (Vector3.Distance(transform.position, target.position) < 0.3f)
+        {
+            Collect();
         }
     }
 
-    public void EnableMagnetDelayed(float delay)
+    public void StartMagnet(Transform player)
     {
-        Invoke(nameof(EnableMagnet), delay);
-    }
-
-    void EnableMagnet()
-    {
+        target = player;
         canBeCollected = true;
+        currentSpeed = baseSpeed;
     }
 
-    public bool CanBeCollected()
+    void Collect()
     {
-        return canBeCollected;
-    }
-
-    public int GetAmount()
-    {
-        return resourceData != null ? resourceData.value : 1;
-    }
-
-    public Sprite GetIcon()
-    {
-        return resourceData != null ? resourceData.icon : null;
-    }
-
-    public string GetName()
-    {
-        return resourceData != null ? resourceData.resourceName : "Unknown";
+        var inventory = target.GetComponent<PlayerInventory>();
+        inventory.AddResource(resource, amount);
+        Destroy(gameObject);
     }
 }

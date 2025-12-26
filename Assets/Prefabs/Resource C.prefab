@@ -122,7 +122,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59f4524dcfcf8e947938f41f02e9e520, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resourceData: {fileID: 0}
+  resource: {fileID: 11400000, guid: b3e6f3e479b53324cad8454512fc6ef2, type: 2}
+  amount: 1
+  canBeCollected: 0
+  target: {fileID: 0}
+  baseSpeed: 4
+  acceleration: 8
 --- !u!54 &2779559022344064895
 Rigidbody:
   m_ObjectHideFlags: 0

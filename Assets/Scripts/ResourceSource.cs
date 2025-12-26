@@ -2,79 +2,75 @@ using UnityEngine;
 
 public class ResourceSource : MonoBehaviour
 {
-    [Header("Resource Settings")]
-    public int maxAmount = 5;
-    private int currentAmount;
-
-    public float respawnInterval = 1f; // восстановление одного ресурса
-    private float respawnTimer;
-
+    [Header("Resource")]
+    public ResourceData resource;
     public GameObject resourcePrefab;
 
-    [Header("Visual Settings")]
-    public Transform modelTransform;
-    public Vector3 minScale = Vector3.zero;
-    public Vector3 maxScale = Vector3.one;
+    [Header("Storage")]
+    public int maxAmount = 10;
+    public int currentAmount = 10;
+
+    [Header("Regeneration")]
+    public float regenTime = 2f;
+
+    [Header("Visual")]
+    public Transform model;
+    private Vector3 baseScale;
+
+    bool isRegenerating;
 
     void Start()
     {
-        currentAmount = maxAmount;
+        baseScale = model.localScale;
         UpdateVisual();
     }
 
-    void Update()
-    {
-        if (currentAmount < maxAmount)
-        {
-            respawnTimer += Time.deltaTime;
-            if (respawnTimer >= respawnInterval)
-            {
-                currentAmount++;
-                respawnTimer = 0f;
-                UpdateVisual();
-            }
-        }
-    }
-
-    // Вызывается, когда игрок бьёт источник
     public void Hit()
     {
-        if (currentAmount <= 0) return;
+        if (currentAmount <= 0)
+            return;
 
         currentAmount--;
-        UpdateVisual();
+
         SpawnResource();
+        UpdateVisual();
+
+        if (!isRegenerating)
+            StartCoroutine(Regenerate());
     }
 
     void SpawnResource()
     {
-        Vector3 spawnPos = transform.position;
+        Vector3 randomOffset = Random.insideUnitSphere * 0.5f;
+        randomOffset.y = 0;
 
-        GameObject res = Instantiate(resourcePrefab, spawnPos, Quaternion.identity);
+        GameObject go = Instantiate(
+            resourcePrefab,
+            transform.position + randomOffset,
+            Quaternion.identity
+        );
 
-        Rigidbody rb = res.GetComponent<Rigidbody>();
-        if (rb != null)
+        ResourcePickup pickup = go.GetComponent<ResourcePickup>();
+        pickup.resource = resource;
+    }
+
+    System.Collections.IEnumerator Regenerate()
+    {
+        isRegenerating = true;
+
+        while (currentAmount < maxAmount)
         {
-            Vector3 randomDir = new Vector3(
-                Random.Range(-1f, 1f),
-                0.5f,
-                Random.Range(-1f, 1f)
-            ).normalized;
-
-            float force = Random.Range(1.5f, 3f);
-            rb.AddForce(randomDir * force, ForceMode.Impulse);
+            yield return new WaitForSeconds(regenTime);
+            currentAmount++;
+            UpdateVisual();
         }
 
-        ResourcePickup pickup = res.GetComponent<ResourcePickup>();
-        if (pickup != null)
-            pickup.EnableMagnetDelayed(0.5f);
+        isRegenerating = false;
     }
 
     void UpdateVisual()
     {
-        if (modelTransform == null) return;
-
         float t = (float)currentAmount / maxAmount;
-        modelTransform.localScale = Vector3.Lerp(minScale, maxScale, t);
+        model.localScale = baseScale * Mathf.Clamp01(t);
     }
 }

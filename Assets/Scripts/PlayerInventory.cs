@@ -1,23 +1,27 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
 {
-    private Dictionary<ResourceData, int> resources = new Dictionary<ResourceData, int>();
+    private Dictionary<ResourceData, int> resources = new();
 
-    public void AddResource(ResourceData data)
+    // событие для UI
+    public event Action<ResourceData, int> OnResourceChanged;
+
+    public void AddResource(ResourceData data, int amount)
     {
-        if (data == null) return;
-
         if (!resources.ContainsKey(data))
             resources[data] = 0;
 
-        resources[data] += data.value;
-        Debug.Log($"Collected {data.resourceName}: {resources[data]}"); // проверка
+        resources[data] += amount;
+
+        // уведомляем UI
+        OnResourceChanged?.Invoke(data, resources[data]);
     }
 
-    public Dictionary<ResourceData, int> GetAllResources()
+    public int GetAmount(ResourceData data)
     {
-        return new Dictionary<ResourceData, int>(resources);
+        return resources.TryGetValue(data, out int value) ? value : 0;
     }
 }
