@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ea9c452c24ce24aaffe1d77907a944, type: 3}
   m_Name: "\u041A\u0440\u0430\u0441\u043D\u044B\u0439 \u0440\u0435\u0441"
   m_EditorClassIdentifier: 
-  resourceName: "\u0421\u0438\u043D\u0438\u0439"
-  icon: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
-  value: 1
-  prefab: {fileID: 5070770989915637419, guid: 8b2c3bd04512bc34189055200eca5a72, type: 3}
+  id: 0
+  resourceName: 
+  icon: {fileID: 0}

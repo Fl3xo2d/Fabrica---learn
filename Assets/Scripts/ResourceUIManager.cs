@@ -1,51 +1,63 @@
 using UnityEngine;
-using TMPro;
+using System.Collections.Generic;
 
 public class ResourceUIManager : MonoBehaviour
 {
-    [Header("References")]
+    [Header("»нвентарь игрока")]
     public PlayerInventory inventory;
-    public ResourceDatabase database;
-    public GameObject resourceUIPrefab; // prefab с Icon + TextMeshProUGUI
 
-    [Header("Layout Settings")]
-    public float spacing = 30f; // рассто€ние между блоками
+    [Header("UI настройки")]
+    public Transform uiParent;           // –одительский объект дл€ UI слотов
+    public GameObject resourceUIPrefab;  // ѕрефаб UI слота с ResourceUI и TextMeshProUGUI
+
+    private List<ResourceUI> uiSlots = new List<ResourceUI>();
 
     void Start()
     {
-        if (inventory == null || database == null || resourceUIPrefab == null)
+        if (inventory == null)
         {
-            Debug.LogError("ResourceUIManager: не назначены ссылки!");
+            Debug.LogError("Inventory не назначен на ResourceUIManager");
             return;
         }
 
-        float yOffset = 0f;
-
-        foreach (var res in database.allResources)
+        if (resourceUIPrefab == null)
         {
-            GameObject go = Instantiate(resourceUIPrefab, transform);
-            go.name = res.name;
+            Debug.LogError("ResourceUIPrefab не назначен на ResourceUIManager");
+            return;
+        }
 
-            // позиционируем вертикально
-            go.transform.localPosition = new Vector3(0, -yOffset, 0);
-            yOffset += spacing;
+        if (uiParent == null)
+        {
+            Debug.LogError("uiParent не назначен на ResourceUIManager");
+            return;
+        }
 
-            // находим текст в prefab
-            var text = go.GetComponentInChildren<TextMeshProUGUI>();
-            if (text == null)
+        CreateUISlots();
+    }
+
+    private void CreateUISlots()
+    {
+        float yOffset = 0f; // начальное смещение
+        float yStep = 30f;  // шаг смещени€ дл€ каждого нового слота
+
+        foreach (var res in inventory.allResources)
+        {
+            GameObject go = Instantiate(resourceUIPrefab, uiParent);
+            go.name = "UI_" + res.name;
+
+            RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt != null)
+                rt.anchoredPosition = new Vector2(0f, -yOffset);
+
+            ResourceUI ui = go.GetComponent<ResourceUI>();
+            if (ui != null)
             {
-                Debug.LogError("ResourceUIPrefab не содержит TextMeshProUGUI!");
-                continue;
+                ui.inventory = inventory;
+                ui.resource = res;
+                uiSlots.Add(ui);
             }
 
-            // добавл€ем компонент ResourceUI
-            var ui = go.AddComponent<ResourceUI>();
-            ui.inventory = inventory;
-            ui.resource = res;
-            ui.text = text;
-
-            // обновление текста сразу
-            text.text = inventory.GetAmount(res).ToString();
+            yOffset += yStep; // сдвиг дл€ следующего слота
         }
     }
 }

@@ -1,88 +1,63 @@
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
+using System.Collections;
 
 public class FactoryPrototype : MonoBehaviour
 {
-    [Header("Stats")]
-    public int level = 1;
-    public int money = 0;
-    public int resources = 999; // ����������� ������� ��� ���������
+    public ResourceData requiredResource;       // ресурс, который фабрика принимает
+    public Transform spawnPoint;                // точка спавна продукта
+    public float interactionRadius = 3f;        // радиус для взаимодействия с игроком
+    public float processingTime = 2f;           // время переработки
+    public GameObject productPrefab;            // префаб продукта
 
-    [Header("Production")]
-    public float productionTime = 2f;
-    private float timer;
-
-    [Header("Economy")]
-    public int baseProductPrice = 10;
-    public float productPriceMultiplier = 1.3f;
-
-    public int baseUpgradeCost = 50;
-    public float upgradeCostMultiplier = 1.6f;
-
-    [Header("UI")]
-    public Text levelText;
-    public Text moneyText;
-    public Text priceText;
-    public Text upgradeCostText;
+    private bool isProcessing = false;
 
     void Update()
     {
-        Produce();
-        UpdateUI();
-    }
-
-    void Produce()
-    {
-        if (resources <= 0)
-            return;
-
-        timer += Time.deltaTime;
-
-        if (timer >= productionTime)
+        if (!isProcessing)
         {
-            timer = 0;
-            SellProduct();
+            TryCollectFromPlayer();
         }
     }
 
-    void SellProduct()
+    void TryCollectFromPlayer()
     {
-        int price = GetProductPrice();
-        money += price;
-    }
+        GameObject playerObj = GameObject.FindWithTag("Player");
+        if (playerObj == null) return;
 
-    public void Upgrade()
-    {
-        int cost = GetUpgradeCost();
-
-        if (money < cost)
+        if (Vector3.Distance(transform.position, playerObj.transform.position) > interactionRadius)
             return;
 
-        money -= cost;
-        level++;
+        PlayerInventory inventory = playerObj.GetComponent<PlayerInventory>();
+        if (inventory == null) return;
+
+        if (inventory.GetAmount(requiredResource) > 0)
+        {
+            // создаём визуальную копию ресурса над игроком
+            GameObject resObj = Instantiate(requiredResource.prefab, playerObj.transform.position + Vector3.up, Quaternion.identity);
+            ResourcePickup pickup = resObj.GetComponent<ResourcePickup>();
+            if (pickup != null)
+            {
+                // тянем ресурс к фабрике
+                pickup.StartMagnet(transform, inventory, requiredResource);
+            }
+
+            StartCoroutine(ProcessResource());
+        }
     }
 
-    int GetProductPrice()
+    IEnumerator ProcessResource()
     {
-        return Mathf.RoundToInt(
-            baseProductPrice *
-            Mathf.Pow(productPriceMultiplier, level - 1)
-        );
+        isProcessing = true;
+        yield return new WaitForSeconds(processingTime);
+        SpawnProduct();
+        isProcessing = false;
     }
 
-    int GetUpgradeCost()
+    void SpawnProduct()
     {
-        return Mathf.RoundToInt(
-            baseUpgradeCost *
-            Mathf.Pow(upgradeCostMultiplier, level - 1)
-        );
-    }
-
-    void UpdateUI()
-    {
-        levelText.text = "Level: " + level;
-        moneyText.text = "Money: " + money;
-        priceText.text = "Product Price: " + GetProductPrice();
-        upgradeCostText.text = "Upgrade Cost: " + GetUpgradeCost();
+        if (productPrefab != null && spawnPoint != null)
+        {
+            Instantiate(productPrefab, spawnPoint.position, Quaternion.identity);
+        }
     }
 }

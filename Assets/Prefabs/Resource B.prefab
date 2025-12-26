@@ -125,7 +125,7 @@ MonoBehaviour:
   resource: {fileID: 11400000, guid: 0938cf86a2325664b88f540c1d3d64de, type: 2}
   amount: 1
   canBeCollected: 0
-  target: {fileID: 0}
+  isMagnetActive: 0
   baseSpeed: 4
   acceleration: 8
 --- !u!54 &1565873168051531168

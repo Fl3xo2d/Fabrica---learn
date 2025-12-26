@@ -2,26 +2,47 @@
 
 public class PlayerMagnet : MonoBehaviour
 {
-    public float radius = 3f;
-    public float magnetDelay = 0.3f;
+    [Header("Магнитные настройки")]
+    public float magnetRadius = 3f;       // радиус магнитного действия
+    public float baseSpeed = 4f;          // базовая скорость притяжения
+    public float acceleration = 8f;       // ускорение притяжения
+
+    private PlayerInventory playerInventory;
+
+    void Start()
+    {
+        playerInventory = GetComponent<PlayerInventory>();
+        if (playerInventory == null)
+            Debug.LogError("PlayerInventory не найден на игроке!");
+    }
 
     void Update()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
-
+        // Находим все ресурсы вокруг игрока
+        Collider[] hits = Physics.OverlapSphere(transform.position, magnetRadius);
         foreach (var hit in hits)
         {
             ResourcePickup pickup = hit.GetComponent<ResourcePickup>();
             if (pickup != null && !pickup.canBeCollected)
             {
-                StartCoroutine(StartMagnetWithDelay(pickup));
+                // Проверяем, есть ли ресурс у игрока, который нужно притянуть
+                ResourceData resourceToCollect = pickup.resource;
+                if (resourceToCollect != null)
+                {
+                    // Запускаем магнит с нужными параметрами
+                    pickup.StartMagnet(transform, playerInventory, resourceToCollect);
+
+                    // Устанавливаем начальные скорости для плавного притяжения
+                    pickup.baseSpeed = baseSpeed;
+                    pickup.acceleration = acceleration;
+                }
             }
         }
     }
 
-    System.Collections.IEnumerator StartMagnetWithDelay(ResourcePickup pickup)
+    void OnDrawGizmosSelected()
     {
-        yield return new WaitForSeconds(magnetDelay);
-        pickup.StartMagnet(transform);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, magnetRadius);
     }
 }

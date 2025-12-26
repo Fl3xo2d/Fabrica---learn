@@ -1,10 +1,9 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewResource", menuName = "Resources/ResourceData")]
+[CreateAssetMenu(fileName = "NewResource", menuName = "Resource")]
 public class ResourceData : ScriptableObject
 {
-    public string resourceName;     // Имя ресурса
-    public Sprite icon;             // Иконка для UI
-    public int value = 1;           // Сколько даёт игроку
-    public GameObject prefab;       // Префаб, который спавнится
+    public int id;
+    public string resourceName;
+    public GameObject prefab; // <- сюда привязывается префаб ресурса
 }
