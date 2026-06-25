@@ -10,7 +10,7 @@ public class ResourcePickup : MonoBehaviour
 
     private Transform magnetTarget;
     private PlayerInventory magnetInventory; // если тянет игрок
-    private ResourceData resourceToCollect;  // для фабрики или игрока
+    private ResourceData resourceToCollect;  // ресурс для цели (игрок или фабрика)
     public float baseSpeed = 4f;
     public float acceleration = 8f;
     private float currentSpeed = 0f;
@@ -58,13 +58,13 @@ public class ResourcePickup : MonoBehaviour
 
     void Collect()
     {
-        // Только у игрока списываем ресурс из инвентаря
         if (magnetInventory != null && resourceToCollect != null)
         {
-            magnetInventory.RemoveResource(resourceToCollect, amount);
+            // Игрок собирает ресурс → увеличиваем его инвентарь
+            magnetInventory.AddResource(resourceToCollect, amount);
         }
+        // Иначе это фабрика — ресурс уже списан у игрока и учитывается в стеше фабрики
 
-        // Фабрика визуально тянет префаб, но внутренняя логика фабрики должна отдельно управлять своим стешем
         Destroy(gameObject);
     }
 }

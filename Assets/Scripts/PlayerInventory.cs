@@ -10,8 +10,11 @@ public class ResourceAmount
 
 public class PlayerInventory : MonoBehaviour
 {
-    [Header("Все ресурсы")]
-    public List<ResourceData> allResources;
+    [Header("База ресурсов")]
+    public ResourceDatabase resourceDatabase; // ссылка на базу ресурсов
+
+    [Header("Все ресурсы (автозаполнение)")]
+    public List<ResourceData> allResources = new List<ResourceData>();
 
     [Header("Текущие ресурсы")]
     public List<ResourceAmount> resourceList = new List<ResourceAmount>();
@@ -20,8 +23,19 @@ public class PlayerInventory : MonoBehaviour
 
     void Awake()
     {
-        resources.Clear();
+        // если база ресурсов указана, заполняем allResources автоматически
+        if (resourceDatabase != null && resourceDatabase.allResources != null)
+        {
+            allResources.Clear();
+            foreach (var res in resourceDatabase.allResources)
+            {
+                if (res != null)
+                    allResources.Add(res);
+            }
+        }
 
+        // инициализация словаря
+        resources.Clear();
         foreach (var res in allResources)
         {
             if (res != null && !resources.ContainsKey(res.id))
